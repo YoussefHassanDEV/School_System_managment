@@ -13,9 +13,7 @@ Student enrollment and promotion
 
 It uses JWT-based authentication and role-based authorization with role hierarchy:
 
-nginx
-Copy
-Edit
+
 SUPER_MANAGER > MANAGER > TEACHER > STUDENT
 Meaning higher roles inherit permissions from lower ones.
 
@@ -67,9 +65,7 @@ STUDENT: Can view GPA, level, take exams
 
 Hierarchy:
 
-text
-Copy
-Edit
+
 ROLE_SUPER_MANAGER > ROLE_MANAGER
 ROLE_MANAGER > ROLE_TEACHER
 ROLE_TEACHER > ROLE_STUDENT
@@ -92,17 +88,14 @@ Git
 (Optional) MySQL/PostgreSQL if not using H2
 
 Clone the repository
-bash
-Copy
-Edit
+
 git clone https://github.com/your-username/student-management-system.git
 cd student-management-system
 Configure application properties
 Edit src/main/resources/application.properties:
 
 properties
-Copy
-Edit
+
 server.port=8000
 
 spring.datasource.url=jdbc:h2:mem:testdb
@@ -117,8 +110,6 @@ jwt.expiration=86400000 # 1 day in ms
 For MySQL:
 
 properties
-Copy
-Edit
 spring.datasource.url=jdbc:mysql://localhost:3306/student_db
 spring.datasource.username=root
 spring.datasource.password=your_password
@@ -126,8 +117,6 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
 Build & Run
 bash
-Copy
-Edit
 mvn clean install
 mvn spring-boot:run
 Server will start at: http://localhost:8000
@@ -141,8 +130,6 @@ POST	/api/auth/login	PUBLIC	Login and get JWT token
 Signup Example:
 
 json
-Copy
-Edit
 {
   "name": "John Manager",
   "username": "john123",
@@ -152,8 +139,6 @@ Edit
 Login Example:
 
 json
-Copy
-Edit
 {
   "username": "john123",
   "password": "pass123"
