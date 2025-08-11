@@ -3,6 +3,8 @@ package com.example.student_management_system.Config;
 import com.example.student_management_system.Filter.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -11,9 +13,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -38,33 +40,51 @@ public class SecurityConfig {
         return authProvider;
     }
 
-
-    // ✅ AuthenticationManager from Spring
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
+    // Role hierarchy definition
+    @Bean
+    public RoleHierarchyImpl roleHierarchy() {
+        RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
+        hierarchy.setHierarchy(
+                "ROLE_SUPER_MANAGER > ROLE_MANAGER\n" +
+                        "ROLE_MANAGER > ROLE_TEACHER\n" +
+                        "ROLE_TEACHER > ROLE_STUDENT"
+        );
+        return hierarchy;
+    }
+
+    // For @PreAuthorize in services/controllers
+    @Bean
+    public DefaultMethodSecurityExpressionHandler methodSecurityExpressionHandler(RoleHierarchyImpl roleHierarchy) {
+        DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+        handler.setRoleHierarchy(roleHierarchy);
+        return handler;
+    }
+
+    // For web request authorization
+    @Bean
+    public DefaultWebSecurityExpressionHandler customWebSecurityExpressionHandler(RoleHierarchyImpl roleHierarchy) {
+        DefaultWebSecurityExpressionHandler handler = new DefaultWebSecurityExpressionHandler();
+        handler.setRoleHierarchy(roleHierarchy);
+        return handler;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Allow everyone to access login and signup endpoints
                         .requestMatchers("/api/auth/login", "/api/auth/signup").permitAll()
 
-                        // SUPER_MANAGER can access everything
-                        .requestMatchers("/api/**").hasRole("SUPER_MANAGER")
-
-                        // MANAGER role access on manager endpoints
                         .requestMatchers("/api/managers/**").hasRole("MANAGER")
-
-                        // TEACHER role access on teacher endpoints
                         .requestMatchers("/api/teachers/**").hasRole("TEACHER")
-
-                        // STUDENT role access on student endpoints
                         .requestMatchers("/api/students/**").hasRole("STUDENT")
+                        .requestMatchers("/api/exams/**").hasRole("STUDENT")
 
-                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
@@ -72,5 +92,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-
 }

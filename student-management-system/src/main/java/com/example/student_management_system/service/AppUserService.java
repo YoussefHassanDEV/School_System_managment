@@ -3,6 +3,7 @@ package com.example.student_management_system.service;
 import com.example.student_management_system.model.AppUser;
 import com.example.student_management_system.repositiory.AppUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -11,13 +12,12 @@ import java.util.Optional;
 public class AppUserService {
 
     private final AppUserRepository appUserRepository;
-//    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AppUserService(AppUserRepository appUserRepository
-    ) {
+    public AppUserService(AppUserRepository appUserRepository, PasswordEncoder passwordEncoder) {
         this.appUserRepository = appUserRepository;
-//        this.passwordEncoder = passwordEncoder;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Optional<AppUser> findByUsername(String username) {
@@ -25,8 +25,8 @@ public class AppUserService {
     }
 
     public AppUser save(AppUser user) {
-        if (user.getPassword()!=null){
-//            user.setPassword(passwordEncoder.encode((user.getPassword())));
+        if (user.getPassword() != null && !user.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         return appUserRepository.save(user);
     }

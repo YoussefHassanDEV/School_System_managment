@@ -120,12 +120,17 @@ public class StudentService {
                 .map(existingStudent -> {
                     existingStudent.setName(updatedStudent.getName());
                     existingStudent.setUsername(updatedStudent.getUsername());
-                    existingStudent.setPassword(updatedStudent.getPassword());
+                    if (updatedStudent.getPassword() != null && !updatedStudent.getPassword().isBlank()) {
+                        existingStudent.setPassword(passwordEncoder.encode(updatedStudent.getPassword()));
+                    }
                     existingStudent.setGpa(updatedStudent.getGpa());
                     existingStudent.setLevel(updatedStudent.getLevel());
                     return studentRepository.save(existingStudent);
                 })
                 .orElseGet(() -> {
+                    if (updatedStudent.getPassword() != null) {
+                        updatedStudent.setPassword(passwordEncoder.encode(updatedStudent.getPassword()));
+                    }
                     updatedStudent.setId(id);
                     updatedStudent.setRole(Role.STUDENT);
                     return studentRepository.save(updatedStudent);

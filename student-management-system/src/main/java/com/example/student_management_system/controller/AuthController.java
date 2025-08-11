@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+
 import java.util.stream.Collectors;
 
 @RestController
@@ -35,7 +35,11 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody UserDto request) throws Exception {
+    public ResponseEntity<?> signup(@RequestBody UserDto request) {
+        if (request.getUsername() == null || request.getPassword() == null) {
+            return ResponseEntity.badRequest().body("username and password required");
+        }
+
         if (userRepository.existsByUsername(request.getUsername())) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
@@ -43,8 +47,18 @@ public class AuthController {
         AppUser user = new AppUser();
         user.setName(request.getName());
         user.setUsername(request.getUsername());
-        user.setRole(Role.MANAGER);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // parse role if provided; default to STUDENT
+        Role role = Role.STUDENT;
+        if (request.getRole() != null) {
+            try {
+                role = Role.valueOf(request.getRole().trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body("Invalid role. Allowed: STUDENT, TEACHER, MANAGER, SUPER_MANAGER");
+            }
+        }
+        user.setRole(role);
         userRepository.save(user);
 
         return ResponseEntity.ok("User registered successfully");
@@ -53,7 +67,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserDto request) {
         try {
-
             var auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
@@ -62,7 +75,7 @@ public class AuthController {
 
             List<String> roles = userDetails.getAuthorities()
                     .stream()
-                    .map(a -> a.getAuthority())
+                    .map(a -> a.getAuthority().replace("ROLE_", ""))
                     .collect(Collectors.toList());
 
             String token = jwtUtil.generateToken(userDetails.getUsername(), roles);
