@@ -165,9 +165,9 @@ Authorization: Bearer <your_jwt_token>
 
 For detailed API specifications, refer to the source code and consider generating OpenAPI/Swagger documentation from the project.
 
-## Code Fixes and Improvements (from ChatGPT Conversation)
+## Code Fixes and Improvements 
 
-This section summarizes the key code fixes and improvements discussed in the ChatGPT conversation, demonstrating the project's commitment to best practices and robust development.
+This section summarizes the key code fixes and improvements , demonstrating the project's commitment to best practices and robust development.
 
 ### 1) `Role.java` — add `SUPER_MANAGER`
 
